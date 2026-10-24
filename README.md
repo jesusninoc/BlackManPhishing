@@ -35,14 +35,14 @@
 
 ### Linux Install:
 ```
-git clone https://github.com/manashma/BlackManPhishing BlackMan
+git clone https://github.com/jesusninoc/BlackManPhishing BlackMan
 cd BlackMan
 sudo bash install.sh
 ```
 
 ### Termux Install:
 ```
-git clone https://github.com/manashma/BlackManPhishing BlackMan
+git clone https://github.com/jesusninoc/BlackManPhishing BlackMan
 cd BlackMan
 chmod +x termux_install.sh
 ./termux_install.sh
